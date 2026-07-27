@@ -1,36 +1,78 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AI智能履历平台
 
-## Getting Started
+面向求职者的AI智能履历平台。基于个人经历生成AI分身，面试官可通过ID+临时访问码与AI分身对话了解求职者。
 
-First, run the development server:
+## 技术栈
 
+- **前端/后端**: Next.js 16 + TypeScript + TailwindCSS v4
+- **数据库**: Supabase PostgreSQL
+- **AI**: DeepSeek API
+- **部署**: Vercel + Supabase
+
+## 快速开始
+
+### 1. 环境要求
+- Node.js 20.9+, npm 10+
+
+### 2. 安装依赖
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 3. 环境变量
+创建 `.env.local`（已存在），确认内容正确：
+```
+NEXT_PUBLIC_SUPABASE_URL=https://xqhwjxgxhujsxrkjqnzp.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<你的anon_key>
+DEEPSEEK_API_KEY=<你的DeepSeek API Key>
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 4. 设置数据库
+在 **Supabase SQL Editor** 中运行 `supabase-migration.sql`：
+1. 打开 https://supabase.com/dashboard (GitHub登录)
+2. 选项目 → SQL Editor → 粘贴并运行迁移脚本
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 5. 启动
+```bash
+npm run dev
+```
+访问 http://localhost:3000
 
-## Learn More
+### 管理员账号
+- 用户名: `admin` | 密码: `admin123`
 
-To learn more about Next.js, take a look at the following resources:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 项目结构
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+src/app/
+├── page.tsx          # 门户首页
+├── login/            # 登录/注册
+├── c/                # C端（求职者）
+│   ├── dashboard/    # 总览
+│   ├── card/         # 名片管理
+│   ├── experience/   # 经历管理
+│   ├── avatar/       # AI分身+调试对话
+│   ├── share/        # 分享管理
+│   └── settings/     # 账号设置
+├── b/                # B端（面试官）
+│   ├── enter/        # 验证入口
+│   └── profile/      # 候选人页+AI对话
+├── admin/            # 管理端
+│   ├── login/        # 管理员登录
+│   ├── dashboard/    # 数据看板
+│   ├── users/        # 用户管理
+│   ├── reviews/      # 审核管理
+│   └── config/       # 站点配置
+└── api/              # API路由（auth, cards, experience, access-codes, conversations, reviews, admin）
+```
 
-## Deploy on Vercel
+## 部署到 Vercel
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. 推送代码到 GitHub
+2. 在 https://vercel.com 导入仓库
+3. 设置环境变量
+4. 自动部署
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## API安全
+DeepSeek API Key 仅在服务器端 `.env.local` 中，通过 API Routes 代理调用，前端不暴露。
