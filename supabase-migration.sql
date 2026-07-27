@@ -223,7 +223,39 @@ CREATE INDEX IF NOT EXISTS idx_debug_sessions_user ON avatar_debug_sessions(user
 CREATE INDEX IF NOT EXISTS idx_debug_sessions_avatar ON avatar_debug_sessions(avatar_id);
 
 -- ============================================================
--- 11. AI审核记录
+-- ============================================================
+-- 11. 管理员角色（提前定义，供 ai_reviews 引用）
+-- ============================================================
+CREATE TABLE IF NOT EXISTS admin_roles (
+    id              BIGSERIAL       PRIMARY KEY,
+    name            VARCHAR(50)     NOT NULL UNIQUE,
+    display_name    VARCHAR(50)     NOT NULL,
+    permissions     JSONB           NOT NULL DEFAULT '[]',
+    created_at      TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
+    updated_at      TIMESTAMPTZ     NOT NULL DEFAULT NOW()
+);
+
+-- ============================================================
+-- 12. 管理员用户（提前定义，供 ai_reviews 引用）
+-- ============================================================
+CREATE TABLE IF NOT EXISTS admin_users (
+    id              BIGSERIAL       PRIMARY KEY,
+    username        VARCHAR(50)     NOT NULL UNIQUE,
+    password_hash   VARCHAR(200)    NOT NULL,
+    real_name       VARCHAR(50),
+    role_id         BIGINT          NOT NULL REFERENCES admin_roles(id),
+    status          VARCHAR(20)     NOT NULL DEFAULT 'active'
+                        CHECK (status IN ('active', 'disabled')),
+    last_login_at   TIMESTAMPTZ,
+    created_at      TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
+    updated_at      TIMESTAMPTZ     NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_admin_users_role ON admin_users(role_id);
+CREATE INDEX IF NOT EXISTS idx_admin_users_status ON admin_users(status);
+
+-- ============================================================
+-- 13. AI审核记录
 -- ============================================================
 CREATE TABLE IF NOT EXISTS ai_reviews (
     id                      BIGSERIAL   PRIMARY KEY,
@@ -251,7 +283,7 @@ CREATE INDEX IF NOT EXISTS idx_ai_reviews_status ON ai_reviews(status);
 CREATE INDEX IF NOT EXISTS idx_ai_reviews_risk ON ai_reviews(risk_level) WHERE risk_level IN ('medium', 'high');
 
 -- ============================================================
--- 12. 访问码
+-- 14. 访问码
 -- ============================================================
 CREATE TABLE IF NOT EXISTS access_codes (
     id              BIGSERIAL       PRIMARY KEY,
@@ -275,7 +307,7 @@ CREATE INDEX IF NOT EXISTS idx_access_codes_card ON access_codes(card_id);
 CREATE INDEX IF NOT EXISTS idx_access_codes_status ON access_codes(status) WHERE status = 'active';
 
 -- ============================================================
--- 13. 访问记录
+-- 15. 访问记录
 -- ============================================================
 CREATE TABLE IF NOT EXISTS access_logs (
     id              BIGSERIAL       PRIMARY KEY,
@@ -289,7 +321,7 @@ CREATE INDEX IF NOT EXISTS idx_access_logs_code ON access_logs(access_code_id);
 CREATE INDEX IF NOT EXISTS idx_access_logs_time ON access_logs(accessed_at DESC);
 
 -- ============================================================
--- 14. AI对话会话
+-- 16. AI对话会话
 -- ============================================================
 CREATE TABLE IF NOT EXISTS conversations (
     id              BIGSERIAL       PRIMARY KEY,
@@ -307,7 +339,7 @@ CREATE INDEX IF NOT EXISTS idx_conversations_user ON conversations(user_id);
 CREATE INDEX IF NOT EXISTS idx_conversations_time ON conversations(started_at DESC);
 
 -- ============================================================
--- 15. 对话消息
+-- 17. 对话消息
 -- ============================================================
 CREATE TABLE IF NOT EXISTS conversation_messages (
     id              BIGSERIAL       PRIMARY KEY,
@@ -322,7 +354,7 @@ CREATE INDEX IF NOT EXISTS idx_messages_conversation ON conversation_messages(co
 CREATE INDEX IF NOT EXISTS idx_messages_time ON conversation_messages(conversation_id, created_at);
 
 -- ============================================================
--- 16. 对话摘要
+-- 18. 对话摘要
 -- ============================================================
 CREATE TABLE IF NOT EXISTS conversation_summaries (
     id                  BIGSERIAL   PRIMARY KEY,
@@ -335,37 +367,6 @@ CREATE TABLE IF NOT EXISTS conversation_summaries (
 );
 
 CREATE INDEX IF NOT EXISTS idx_summaries_conversation ON conversation_summaries(conversation_id);
-
--- ============================================================
--- 17. 管理员角色
--- ============================================================
-CREATE TABLE IF NOT EXISTS admin_roles (
-    id              BIGSERIAL       PRIMARY KEY,
-    name            VARCHAR(50)     NOT NULL UNIQUE,
-    display_name    VARCHAR(50)     NOT NULL,
-    permissions     JSONB           NOT NULL DEFAULT '[]',
-    created_at      TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
-    updated_at      TIMESTAMPTZ     NOT NULL DEFAULT NOW()
-);
-
--- ============================================================
--- 18. 管理员用户
--- ============================================================
-CREATE TABLE IF NOT EXISTS admin_users (
-    id              BIGSERIAL       PRIMARY KEY,
-    username        VARCHAR(50)     NOT NULL UNIQUE,
-    password_hash   VARCHAR(200)    NOT NULL,
-    real_name       VARCHAR(50),
-    role_id         BIGINT          NOT NULL REFERENCES admin_roles(id),
-    status          VARCHAR(20)     NOT NULL DEFAULT 'active'
-                        CHECK (status IN ('active', 'disabled')),
-    last_login_at   TIMESTAMPTZ,
-    created_at      TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
-    updated_at      TIMESTAMPTZ     NOT NULL DEFAULT NOW()
-);
-
-CREATE INDEX IF NOT EXISTS idx_admin_users_role ON admin_users(role_id);
-CREATE INDEX IF NOT EXISTS idx_admin_users_status ON admin_users(status);
 
 -- ============================================================
 -- 19. 操作日志
